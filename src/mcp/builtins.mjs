@@ -22,6 +22,7 @@ export const BUILTIN_MCP_SERVERS = [
     },
     requires: ["npx"],
     install: "npx rea-agents setup   (or install directly with the command below)",
+    note: "First launch downloads a large native-addon tree (its npx cache passed 600MB and was still growing after 6 minutes), so the handshake does not arrive inside any default budget. Run `npx rea-agents setup` once, or raise TIKI_MCP_INIT_TIMEOUT_MS, before connecting.",
     docs: "https://github.com/morluto/rea",
     tags: ["reverse-engineering", "binary", "android", "firmware"],
     defaultTrust: "untrusted"
