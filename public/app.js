@@ -458,7 +458,7 @@ async function loadMcp() {
     for (const s of servers) {
       const li = el("div", "list-item");
       li.innerHTML = `<div class="grow"><div class="nm">${esc(s.name)} ${s.trust === "trusted" ? '<span class="pill warn">trusted</span>' : '<span class="pill">untrusted</span>'} ${s.builtin ? '<span class="pill">built-in</span>' : ''}</div>
-        <div class="sub">${esc(s.url || `${s.command} ${(s.args || []).join(" ")}`)} · ${esc(s.status)}</div></div>`;
+        <div class="sub">${esc(s.url || `${s.command} ${(s.args || []).join(" ")}`)} · ${esc(s.status)}${s.cwd ? ` · cwd ${esc(s.cwd)}` : ""}</div></div>`;
       const connect = el("button", "btn sm"); connect.textContent = "Connect";
       connect.addEventListener("click", async () => { try { await api(`/api/mcp/servers/${s.id}/connect`, { method: "POST" }); const d = await api(`/api/mcp/servers/${s.id}/describe`); toast(`${d.tools.length} tools discovered`, "ok"); loadMcp(); } catch (e) { toast(e.message, "err"); } });
       const trust = el("button", "btn sm ghost");
@@ -468,9 +468,21 @@ async function loadMcp() {
         try { await api(`/api/mcp/servers/${s.id}`, { method: "PATCH", body: { trust: s.trust === "trusted" ? "untrusted" : "trusted" } }); loadMcp(); }
         catch (e) { toast(e.message, "err"); }
       });
+      li.append(connect, trust);
+      if (s.transport === "stdio" && s.builtin) {
+        const dir = el("button", "btn sm ghost"); dir.textContent = "Set dir";
+        dir.title = "Working directory for this server — bolt and friends run from a clone you made";
+        dir.addEventListener("click", async () => {
+          const value = prompt("Working directory for this server", s.cwd || "");
+          if (value === null) return;
+          try { await api(`/api/mcp/servers/${s.id}`, { method: "PATCH", body: { cwd: value.trim() } }); loadMcp(); }
+          catch (e) { toast(e.message, "err"); }
+        });
+        li.appendChild(dir);
+      }
       const del = el("button", "btn sm danger"); del.textContent = "×";
       del.addEventListener("click", async () => { await api(`/api/mcp/servers/${s.id}`, { method: "DELETE" }); loadMcp(); });
-      li.append(connect, trust, del); list.appendChild(li);
+      li.append(del); list.appendChild(li);
     }
     refreshMcpBuiltins();
   } catch {}
@@ -485,7 +497,7 @@ async function refreshMcpBuiltins() {
       const transport = b.transport === "bundle" ? "bundle" : b.transport;
       const badge = b.installed ? '<span class="pill ok">installed</span>' : (b.transport !== "bundle" && !b.ready ? '<span class="pill warn">needs config</span>' : '');
       li.innerHTML = `<div class="grow"><div class="nm">${esc(b.name)} <span class="pill">${esc(transport)}</span> ${badge}</div>
-        <div class="sub">${esc(String(b.description || "").slice(0, 160))}</div>${b.note ? `<div class="sub">⚠ ${esc(String(b.note).slice(0, 200))}</div>` : ""}</div>`;
+        <div class="sub">${esc(String(b.description || "").slice(0, 160))}</div>${b.note ? `<div class="sub">⚠ ${esc(String(b.note).slice(0, 200))}</div>` : ""}${b.cwdHint ? `<div class="sub">runs from a directory you supply (${esc(b.cwdHint)}) — set it after installing</div>` : ""}</div>`;
       if (b.transport === "bundle") {
         const btn = el("button", "btn sm"); btn.textContent = "Add children";
         btn.addEventListener("click", async () => {

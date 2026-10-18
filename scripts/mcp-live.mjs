@@ -8,6 +8,7 @@
 //
 //   node scripts/mcp-live.mjs                     # keyless built-ins
 //   node scripts/mcp-live.mjs context7 magic       # explicit selection
+//   node scripts/mcp-live.mjs bolt --cwd=~/bolt    # clone-based servers
 //
 // Built-ins that need credentials are skipped unless their env var is set.
 // Not part of `check`, `test` or `test:smoke` — it needs the network and a
@@ -25,14 +26,16 @@ const DEFAULT_IDS = ["context7", "context7-remote", "frontend-inspo", "lightswin
 function parseArgs(argv) {
   const ids = [];
   let timeout = 120_000;
+  let cwd;
   for (const arg of argv) {
     if (arg.startsWith("--timeout=")) timeout = Number(arg.split("=")[1]) || timeout;
+    else if (arg.startsWith("--cwd=")) cwd = arg.slice("--cwd=".length);
     else if (!arg.startsWith("-")) ids.push(arg);
   }
-  return { ids: ids.length > 0 ? ids : DEFAULT_IDS, timeout };
+  return { ids: ids.length > 0 ? ids : DEFAULT_IDS, timeout, cwd };
 }
 
-const { ids, timeout } = parseArgs(process.argv.slice(2));
+const { ids, timeout, cwd } = parseArgs(process.argv.slice(2));
 const dataDir = await mkdtemp(join(tmpdir(), "tiki-mcp-live-"));
 const logger = {
   warn: (msg) => process.stderr.write(`  warn: ${msg}\n`),
@@ -61,10 +64,17 @@ try {
       results.push({ id, ok: true, reason: "skipped" });
       continue;
     }
+    // Servers like bolt only run from a checkout the user made; without one
+    // there is nothing to spawn.
+    if (known.cwdHint && !cwd) {
+      console.log(`${id.padEnd(18)} skipped   runs from a directory you supply — pass --cwd=<path>`);
+      results.push({ id, ok: true, reason: "skipped" });
+      continue;
+    }
 
     const started = Date.now();
     try {
-      const server = mcp.installBuiltin(id, { trust: "trusted" });
+      const server = mcp.installBuiltin(id, { trust: "trusted", cwd });
       await mcp.connect(server.id);
       const info = await mcp.describe(server.id);
       const secs = ((Date.now() - started) / 1000).toFixed(1);

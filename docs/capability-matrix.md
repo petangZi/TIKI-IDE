@@ -45,6 +45,7 @@ limits), **na** (not applicable to a local-first build).
 | MCP | Built-in server catalog | done | Eleven curated servers, one-click install, env-gated readiness. |
 | Skills | Built-in skill catalog | done | Ponytail, Caveman, OpenSpec. Records choice + surfaces command. |
 | MCP | Trust gating + output redaction | done | Untrusted servers cannot be invoked. |
+| MCP | Live catalog verification | done | `npm run mcp:live`; context7 (2 tools), context7-remote over HTTP (2), frontend-inspo (6), lightswind (8, launch args carry its undeclared deps), bolt from a clone (39, ~3 min boot). |
 | Tools | Schema-validated runtime | done | Input + output validation, timeouts. |
 | Tools | Built-in tools | done | `mock.echo`, `weather.current`, `http.get`. |
 | Tools | Public-API gateway | done | 2153 curated APIs/51 categories; `public_api.search/describe/call`; HTTPS + SSRF + size guarded. |

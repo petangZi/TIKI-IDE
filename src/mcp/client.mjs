@@ -304,6 +304,12 @@ export function createMcpManager({ store, logger = console, timeoutMs = DEFAULT_
     if (patch.trust !== undefined) server.trust = patch.trust === "trusted" ? "trusted" : "untrusted";
     if (patch.enabled !== undefined) server.enabled = patch.enabled !== false;
     if (patch.name !== undefined) server.name = String(patch.name).slice(0, 80);
+    // Some servers (bolt) must run from a checkout the user made, so the
+    // working directory has to be settable after install.
+    if (patch.cwd !== undefined) {
+      if (server.transport !== "stdio") throw new Error("cwd only applies to stdio servers");
+      server.cwd = patch.cwd ? String(patch.cwd) : undefined;
+    }
     persist(d);
     return server;
   }

@@ -133,6 +133,7 @@ export const BUILTIN_MCP_SERVERS = [
     },
     requires: ["bun"],
     install: "git clone https://github.com/CyberStrikeus/bolt && bun install   (or: docker run -p 3001:3001 -e MCP_ADMIN_TOKEN=... bolt)",
+    note: "Verified running: `bun run packages/core/src/index.ts` from a clone answers initialize as serverInfo bolt 1.0.0 and aggregates ~40 tools (nmap, nuclei, dnsx, alterx, amass, arjun, commix, crtsh, masscan, hydra, medusa, kerbrute, hashcat, john, impacket, …). Two caveats: boot takes minutes, so raise TIKI_MCP_INIT_TIMEOUT_MS (300000 is comfortable), and the working directory must be the clone — set it per server. `bun install --ignore-scripts` skips node-pty, which only degrades the katana child.",
     variants: [
       {
         id: "bolt-http",
@@ -280,6 +281,7 @@ export function listBuiltins({ source = process.env } = {}) {
     docs: entry.docs,
     install: entry.install,
     note: entry.note || null,
+    cwdHint: entry.cwdHint || null,
     tags: entry.tags || [],
     requires: entry.requires || [],
     defaultTrust: entry.defaultTrust || "untrusted",
@@ -338,7 +340,10 @@ export function resolveBuiltin(id, options = {}) {
   } else {
     record.command = entry.command;
     record.args = expandEnv(entry.args || [], source);
-    if (options.cwd || entry.cwdHint) record.cwd = options.cwd || entry.cwdHint;
+    // cwdHint is a placeholder for a path only the user knows (a clone they
+    // made), so it is never used as a real cwd — passing "<path-to-...>" to
+    // spawn just fails. The caller has to supply the path.
+    if (options.cwd) record.cwd = options.cwd;
     const env = {};
     for (const name of Object.keys(entry.env || {})) {
       if (source[name]) env[name] = String(source[name]);

@@ -128,6 +128,16 @@ test("research-driven built-ins resolve to real launch specs", () => {
   assert.equal(resolveBuiltin("context7-remote", { env: { CONTEXT7_API_KEY: "k" } }).headers.Authorization, "Bearer k");
 });
 
+test("a cwdHint is a display hint, never a real working directory", () => {
+  // bolt lives in a clone the user makes; "<path-to-bolt-clone>" must not be
+  // handed to spawn as an actual cwd.
+  const bolt = resolveBuiltin("bolt");
+  assert.equal(bolt.cwd, undefined);
+  assert.equal(resolveBuiltin("bolt", { cwd: "/tmp/bolt" }).cwd, "/tmp/bolt");
+  assert.equal(listBuiltins({ source: {} }).find((b) => b.id === "bolt").cwdHint, "<path-to-bolt-clone>");
+  assert.equal(listBuiltins({ source: {} }).find((b) => b.id === "context7").cwdHint, null);
+});
+
 test("key-gated built-ins report readiness correctly", () => {
   assert.equal(listBuiltins({ source: {} }).find((e) => e.id === "brave-search").ready, false);
   assert.equal(listBuiltins({ source: { BRAVE_API_KEY: "x" } }).find((e) => e.id === "brave-search").ready, true);
@@ -145,6 +155,17 @@ test("updateServer toggles trust without touching the launch spec", async () => 
     assert.deepEqual(updated.args, before.args);
     assert.equal(mcp.updateServer("context7", { trust: "whatever" }).trust, "untrusted");
     assert.throws(() => mcp.updateServer("ghost", { trust: "trusted" }), /not found/);
+  });
+});
+
+test("updateServer can set and clear a stdio working directory", async () => {
+  await withManager((mcp) => {
+    mcp.installBuiltin("bolt");
+    assert.equal(mcp.getServer("bolt").cwd, undefined);
+    assert.equal(mcp.updateServer("bolt", { cwd: "/tmp/bolt" }).cwd, "/tmp/bolt");
+    assert.equal(mcp.updateServer("bolt", { cwd: "" }).cwd, undefined);
+    mcp.installBuiltin("context7-remote");
+    assert.throws(() => mcp.updateServer("context7-remote", { cwd: "/tmp" }), /stdio/);
   });
 });
 
