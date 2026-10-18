@@ -54,7 +54,8 @@ export const BUILTIN_MCP_SERVERS = [
         args: ["mcp-server-linkedin@latest"],
         install: "uvx mcp-server-linkedin@latest --login   (interactive login once)",
         docs: "https://github.com/stickerdaniel/linkedin-mcp-server",
-        requires: ["uvx"]
+        requires: ["uvx"],
+        note: "Needs a glibc host: the server depends on patchright, which publishes no musllinux wheel, so uvx resolves nothing on Alpine/musl and exits 1."
       }
     ],
     note: "Exa search is exposed through `mcporter call exa.web_search_exa`, not a dedicated MCP server."

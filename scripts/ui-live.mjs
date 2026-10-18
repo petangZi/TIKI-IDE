@@ -143,6 +143,46 @@ try {
   check("skills catalog renders", skills.length === 3, skills.map((s) => s.split(" ")[0]).join(", "));
   await shot("03-skills");
 
+  // --- one-click install actually installs -------------------------------
+  // Exercises the primary action: an install button that flips the badge and
+  // lands the skill in the installed list. Restores the prior state after.
+  const installable = page.locator("#skillBuiltins .list-item").filter({ has: page.getByRole("button", { name: "Install" }) }).first();
+  if (await installable.count() > 0) {
+    const name = (await installable.locator(".nm").innerText()).trim().replace(/\s+installed$/, "");
+    // Re-scope by name afterwards: the list re-renders, so a "first row with an
+    // Install button" locator would silently move to the next skill.
+    const row = () => page.locator("#skillBuiltins .list-item").filter({ hasText: name });
+    await installable.getByRole("button", { name: "Install" }).click();
+    await page.waitForFunction(
+      (want) => [...document.querySelectorAll("#skillInstalled .list-item .nm")].some((n) => n.textContent.trim() === want),
+      name,
+      { timeout: 8000 }
+    );
+    const installed = await page.locator("#skillInstalled .list-item").filter({ hasText: name }).count();
+    const badge = await row().locator(".pill.ok").count();
+    check("skill install lands in installed list", installed === 1 && badge === 1, `${name} · installed rows ${installed}, badge ${badge}`);
+    await shot("04-skill-installed");
+
+    await page.locator("#skillInstalled .list-item").filter({ hasText: name }).getByRole("button", { name: "×" }).click();
+    await page.waitForFunction(
+      (want) => ![...document.querySelectorAll("#skillInstalled .list-item .nm")].some((n) => n.textContent.trim() === want),
+      name,
+      { timeout: 8000 }
+    );
+    const stillInstalled = await page.locator("#skillInstalled .list-item").filter({ hasText: name }).count();
+    const backToInstall = await row().getByRole("button", { name: "Install" }).count();
+    check("skill uninstall restores state", stillInstalled === 0 && backToInstall === 1, `${name} removed, button back to Install`);
+  } else {
+    check("skill install lands in installed list", true, "skipped — every skill already installed");
+  }
+
+  // --- no bundle children left half-added --------------------------------
+  const mcpProblems = await page.evaluate(() => {
+    const rows = [...document.querySelectorAll("#mcpList .list-item")];
+    return rows.filter((r) => /undefined|NaN|null/.test(r.textContent)).map((r) => r.textContent.slice(0, 40));
+  });
+  check("server rows render clean values", mcpProblems.length === 0, mcpProblems.join(" | "));
+
   check("no console errors or failed requests", problems.length === 0, [...new Set(problems)].slice(0, 4).join(" | "));
 } finally {
   await browser.close();
