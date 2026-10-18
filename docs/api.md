@@ -86,6 +86,10 @@ Diff report shape: `{ snapshot_id, generated_at, counts: { added, modified, dele
 | POST | `/api/mcp/servers/:id/disconnect` | `{ id, status, servers }` |
 | GET | `/api/mcp/servers/:id/describe` | `{ id, serverInfo, capabilities, tools, resources, prompts }` |
 | POST | `/api/mcp/servers/:id/call` | body `{ tool, args }` → tool result (redacted) |
+| GET | `/api/skills` | `{ skills }` — installed skills |
+| GET | `/api/skills/builtins` | `{ builtins }` — catalog with `installed` |
+| POST | `/api/skills/builtins/:id/install` | body `{ notes? }` → `201 { skill, skills }` |
+| DELETE | `/api/skills/:id` | `{ skills }` |
 
 ### Built-in tool ids
 

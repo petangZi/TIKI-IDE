@@ -108,10 +108,14 @@ are not persisted.
 - MCP servers are treated as untrusted until marked trusted; their output is
   redacted before it reaches the UI.
 - MCP supports two transports: **stdio** (child process) and **Streamable HTTP**
-  (POST JSON-RPC, JSON or SSE replies). Install from a curated catalog of six
-  built-ins — REA, Agent Reach (bundle), Supabase, Firebase, Flutter, Bolt —
+  (POST JSON-RPC, JSON or SSE replies). Install from a curated catalog of eleven
+  built-ins — REA, Agent Reach (bundle), Supabase, Firebase, Flutter, Bolt,
+  Context7, Brave Search, Frontend Inspo, Magic (21st.dev), Lightswind UI —
   via the MCP panel or `POST /api/mcp/builtins/:id/install`. Entries that need a
   token report `needs config` until the env var is set.
+- Built-in **skills** (Ponytail, Caveman, OpenSpec) live in the Skills panel:
+  the IDE records the choice and surfaces the exact install command to run — it
+  never executes the installer itself. See `POST /api/skills/builtins/:id/install`.
 
 ### Tool runtime and the public-API gateway
 

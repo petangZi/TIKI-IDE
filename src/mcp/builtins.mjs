@@ -147,6 +147,109 @@ export const BUILTIN_MCP_SERVERS = [
     docs: "https://github.com/CyberStrikeus/bolt",
     tags: ["security", "pentest", "recon", "network"],
     defaultTrust: "untrusted"
+  },
+  {
+    id: "context7",
+    name: "Context7",
+    description:
+      "Up-to-date, version-specific documentation for any library, injected straight into the prompt. Kills hallucinated APIs. Works without a key at lower rate limits.",
+    transport: "stdio",
+    command: "npx",
+    args: ["-y", "@upstash/context7-mcp"],
+    env: {
+      CONTEXT7_API_KEY: { required: false, description: "Free key from context7.com/dashboard for higher rate limits (optional)." }
+    },
+    requires: ["npx"],
+    install: "npx ctx7 setup   (OAuth + auto-wire), or install below and add a key later",
+    variants: [
+      {
+        id: "context7-remote",
+        name: "Context7 (remote HTTP)",
+        transport: "http",
+        url: "https://mcp.context7.com/mcp",
+        headers: { Authorization: "Bearer ${CONTEXT7_API_KEY}" },
+        env: { CONTEXT7_API_KEY: { required: false, description: "Bearer token for the hosted endpoint." } },
+        note: "Use this when you prefer a hosted endpoint over a local process."
+      }
+    ],
+    docs: "https://github.com/upstash/context7",
+    tags: ["docs", "documentation", "library", "reference"],
+    defaultTrust: "untrusted"
+  },
+  {
+    id: "brave-search",
+    name: "Brave Search",
+    description:
+      "Official Brave Search MCP: web, news, image, video and local search, plus LLM-context grounding and AI summarisation. Needs a Brave Search API key.",
+    transport: "stdio",
+    command: "npx",
+    args: ["-y", "@brave/brave-search-mcp-server", "--transport", "stdio"],
+    env: {
+      BRAVE_API_KEY: { required: true, description: "Brave Search API key from api-dashboard.search.brave.com." }
+    },
+    requires: ["npx"],
+    install: "get a free key at https://api-dashboard.search.brave.com, then install below",
+    docs: "https://github.com/brave/brave-search-mcp-server",
+    tags: ["search", "web", "news", "websearch"],
+    defaultTrust: "untrusted"
+  },
+  {
+    id: "frontend-inspo",
+    name: "Frontend Inspo",
+    description:
+      "Local MCP server for frontend inspiration: discovers and pulls real components, UI code and design patterns from shadcn, Magic UI, Aceternity, FreeFrontend and more. No key needed.",
+    transport: "stdio",
+    command: "npx",
+    args: ["-y", "frontend-inspo-mcp"],
+    env: {},
+    requires: ["npx"],
+    install: "npx -y frontend-inspo-mcp   (runs entirely local; scrapes public component galleries)",
+    docs: "https://www.npmjs.com/package/frontend-inspo-mcp",
+    tags: ["frontend", "ui", "components", "design", "inspiration"],
+    defaultTrust: "untrusted"
+  },
+  {
+    id: "magic",
+    name: "Magic (21st.dev)",
+    description:
+      "21st.dev component MCP: search thousands of production UI components and fetch them into your codebase. Also exposes generate/iterate when AI access is enabled. Needs a 21st.dev API key.",
+    transport: "stdio",
+    command: "npx",
+    args: ["-y", "@21st-dev/magic@latest"],
+    env: {
+      API_KEY_21ST: { required: true, description: "Key from https://21st.dev/mcp. Legacy Magic keys no longer work." }
+    },
+    requires: ["npx"],
+    install: "npx @21st-dev/cli@latest init   or grab a key at https://21st.dev/mcp",
+    variants: [
+      {
+        id: "magic-remote",
+        name: "Magic (remote HTTP)",
+        transport: "http",
+        url: "https://21st.dev/api/mcp",
+        headers: { "x-api-key": "${API_KEY_21ST}" },
+        env: { API_KEY_21ST: { required: true, description: "Key from https://21st.dev/mcp." } },
+        note: "Hosted endpoint; the npx package is a thin stdio proxy to the same server."
+      }
+    ],
+    docs: "https://github.com/21st-dev/magic-mcp",
+    tags: ["frontend", "ui", "components", "21st"],
+    defaultTrust: "untrusted"
+  },
+  {
+    id: "lightswind",
+    name: "Lightswind UI",
+    description:
+      "Component library MCP: browse, fetch and install 160+ animated React/Tailwind components, blocks and page templates directly from an agent. Free tier works without a key; Pro components need a license.",
+    transport: "stdio",
+    command: "npx",
+    args: ["-y", "lightswind", "mcp"],
+    env: {},
+    requires: ["npx"],
+    install: "npx lightswind mcp init   (auto-configures Cursor / Claude Desktop)",
+    docs: "https://github.com/codewithMUHILAN/Lightswind-UI-Library",
+    tags: ["frontend", "ui", "components", "tailwind", "react"],
+    defaultTrust: "untrusted"
   }
 ];
 

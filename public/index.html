@@ -168,6 +168,7 @@
         <button class="ptab" data-view="subagents">Sub-agents</button>
         <button class="ptab" data-view="tools">Tools</button>
         <button class="ptab" data-view="mcp">MCP</button>
+        <button class="ptab" data-view="skills">Skills</button>
         <button class="ptab" data-view="usage">Usage</button>
         <button class="ptab" data-view="prompt">Prompt</button>
         <button class="ptab" data-view="system">System</button>
@@ -278,6 +279,18 @@
           <div class="card">
             <div class="card-head"><b>Servers</b><button class="btn sm ghost" id="refreshMcp">↻</button></div>
             <div class="card-body"><div class="list" id="mcpList"><div class="empty"><b>No MCP servers</b></div></div></div>
+          </div>
+        </div>
+
+        <!-- Skills -->
+        <div class="panel-view" data-view="skills" hidden>
+          <div class="card">
+            <div class="card-head"><b>Built-in skills</b><button class="btn sm ghost" id="refreshSkills">↻</button></div>
+            <div class="card-body"><div class="list" id="skillBuiltins"><div class="empty"><b>Loading…</b></div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><b>Installed</b></div>
+            <div class="card-body"><div class="list" id="skillInstalled"><div class="empty"><b>None yet</b></div></div></div>
           </div>
         </div>
 

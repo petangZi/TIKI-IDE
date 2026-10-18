@@ -19,6 +19,7 @@ import { createAuditLog } from "./src/security/audit.mjs";
 import { createAdapterRegistry } from "./src/adapters/registry.mjs";
 import { createToolRegistry } from "./src/tools/registry.mjs";
 import { createMcpManager } from "./src/mcp/client.mjs";
+import { createSkillManager } from "./src/skills/manager.mjs";
 import { createSubagentRegistry } from "./src/subagents/registry.mjs";
 import { createPriceCatalog } from "./src/engine/prices.mjs";
 import { createUsageLedger } from "./src/engine/cost.mjs";
@@ -31,6 +32,7 @@ import { registerWorkspaceRoutes } from "./src/api/routes/workspace.mjs";
 import { registerAgentRoutes } from "./src/api/routes/agents.mjs";
 import { registerSubagentRoutes } from "./src/api/routes/subagents.mjs";
 import { registerToolRoutes } from "./src/api/routes/tools.mjs";
+import { registerSkillRoutes } from "./src/api/routes/skills.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(HERE, "public");
@@ -51,6 +53,7 @@ export function buildServices(config, logger) {
   const usage = createUsageLedger({ store, prices, logger });
   const tools = createToolRegistry({ config, logger, audit });
   const mcp = createMcpManager({ store, logger });
+  const skills = createSkillManager({ store });
   const subagents = createSubagentRegistry({ store, adapters, logger });
   const orchestrator = createOrchestrator({ config, bus, adapters, runs, workspace, snapshots, usage, policy, promptManager, logger });
   const scheduler = createScheduler({ store, bus, orchestrator, subagents, logger, concurrency: 2 });
@@ -58,7 +61,7 @@ export function buildServices(config, logger) {
 
   return {
     version: VERSION, config, logger, store, bus, runs, workspace, snapshots, promptManager,
-    policy, auth, audit, adapters, prices, usage, tools, mcp, subagents, orchestrator, scheduler
+    policy, auth, audit, adapters, prices, usage, tools, mcp, skills, subagents, orchestrator, scheduler
   };
 }
 
@@ -85,6 +88,7 @@ export function createServer(services) {
   registerAgentRoutes(router, services);
   registerSubagentRoutes(router, services);
   registerToolRoutes(router, services);
+  registerSkillRoutes(router, services);
 
   // SSE endpoint is handled outside the JSON router (it owns its response).
   router.get("/api/events", (ctx) => {

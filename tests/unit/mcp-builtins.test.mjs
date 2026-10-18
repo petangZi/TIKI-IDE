@@ -9,7 +9,7 @@ import { createStore } from "../../src/storage/store.mjs";
 import { createMcpManager, parseHttpMcpBody } from "../../src/mcp/client.mjs";
 import { BUILTIN_MCP_SERVERS, listBuiltins, getBuiltin, resolveBuiltin, expandEnv, missingEnv } from "../../src/mcp/builtins.mjs";
 
-const EXPECTED_IDS = ["rea", "agent-reach", "supabase", "firebase", "flutter", "bolt"];
+const EXPECTED_IDS = ["rea", "agent-reach", "supabase", "firebase", "flutter", "bolt", "context7", "brave-search", "frontend-inspo", "magic", "lightswind"];
 
 async function withManager(fn) {
   const dir = await mkdtemp(join(tmpdir(), "tiki-mcp-"));
@@ -22,11 +22,11 @@ async function withManager(fn) {
   }
 }
 
-test("catalog exposes all six requested built-ins", () => {
+test("catalog exposes all eleven built-ins", () => {
   const ids = BUILTIN_MCP_SERVERS.map((e) => e.id);
   for (const id of EXPECTED_IDS) assert.ok(ids.includes(id), `missing builtin: ${id}`);
   const listed = listBuiltins();
-  assert.equal(listed.length, 6);
+  assert.equal(listed.length, 11);
   for (const entry of listed) {
     assert.equal(typeof entry.name, "string");
     assert.ok(["stdio", "http", "bundle"].includes(entry.transport));
@@ -107,6 +107,29 @@ test("manager install persists a built-in and marks it installed", async () => {
     assert.equal(again.id, "flutter");
     assert.equal(mcp.listServers().length, 1);
   });
+});
+
+test("research-driven built-ins resolve to real launch specs", () => {
+  const brave = resolveBuiltin("brave-search");
+  assert.equal(brave.command, "npx");
+  assert.deepEqual(brave.args, ["-y", "@brave/brave-search-mcp-server", "--transport", "stdio"]);
+
+  const magic = resolveBuiltin("magic", { env: { API_KEY_21ST: "k" } });
+  assert.deepEqual(magic.args, ["-y", "@21st-dev/magic@latest"]);
+  assert.equal(magic.env.API_KEY_21ST, "k");
+  const magicRemote = resolveBuiltin("magic-remote", { env: { API_KEY_21ST: "k" } });
+  assert.equal(magicRemote.url, "https://21st.dev/api/mcp");
+  assert.equal(magicRemote.headers["x-api-key"], "k");
+
+  assert.deepEqual(resolveBuiltin("lightswind").args, ["-y", "lightswind", "mcp"]);
+  assert.deepEqual(resolveBuiltin("frontend-inspo").args, ["-y", "frontend-inspo-mcp"]);
+  assert.equal(resolveBuiltin("context7-remote", { env: { CONTEXT7_API_KEY: "k" } }).headers.Authorization, "Bearer k");
+});
+
+test("key-gated built-ins report readiness correctly", () => {
+  assert.equal(listBuiltins({ source: {} }).find((e) => e.id === "brave-search").ready, false);
+  assert.equal(listBuiltins({ source: { BRAVE_API_KEY: "x" } }).find((e) => e.id === "brave-search").ready, true);
+  assert.equal(listBuiltins({ source: {} }).find((e) => e.id === "frontend-inspo").ready, true);
 });
 
 test("manager rejects an unknown built-in", async () => {

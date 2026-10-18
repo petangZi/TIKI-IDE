@@ -130,10 +130,16 @@ async function main() {
   const mcpDel = await json("DELETE", `/api/mcp/servers/${mcpAdd.data.server.id}`);
   check("DELETE /api/mcp/servers/:id", mcpDel.status === 200 && mcpDel.data.servers.length === 0, `${mcpDel.data?.servers?.length} after delete`);
   const builtins = await json("GET", "/api/mcp/builtins");
-  check("GET /api/mcp/builtins", builtins.status === 200 && builtins.data.builtins.length === 6, `${builtins.data?.builtins?.length} builtins`);
+  check("GET /api/mcp/builtins", builtins.status === 200 && builtins.data.builtins.length === 11, `${builtins.data?.builtins?.length} builtins`);
   const install = await json("POST", "/api/mcp/builtins/flutter/install", {});
   check("POST /api/mcp/builtins/:id/install", install.status === 201 && install.data.server.id === "flutter" && install.data.server.builtin === true, `status ${install.status}`);
   await json("DELETE", "/api/mcp/servers/flutter");
+  const skillCatalog = await json("GET", "/api/skills/builtins");
+  check("GET /api/skills/builtins", skillCatalog.status === 200 && skillCatalog.data.builtins.length === 3, `${skillCatalog.data?.builtins?.length} skills`);
+  const skillInstall = await json("POST", "/api/skills/builtins/caveman/install", {});
+  check("POST /api/skills/builtins/:id/install", skillInstall.status === 201 && skillInstall.data.skill.id === "caveman", `status ${skillInstall.status}`);
+  const skillDel = await json("DELETE", "/api/skills/caveman");
+  check("DELETE /api/skills/:id", skillDel.status === 200 && skillDel.data.skills.length === 0, `${skillDel.data?.skills?.length} skills`);
 
   const prompt = await json("GET", "/api/system-prompt");
   check("GET /api/system-prompt", prompt.status === 200 && prompt.data.corePrompt.length > 50, `v${prompt.data?.version}`);

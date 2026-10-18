@@ -504,6 +504,44 @@ async function addMcp() {
   } catch (e) { toast(e.message, "err"); }
 }
 
+/* --------------------------------------------------------------- Skills */
+async function loadSkills() {
+  const box = $("#skillBuiltins"); if (!box) return;
+  try {
+    const [{ builtins }, { skills }] = await Promise.all([api("/api/skills/builtins"), api("/api/skills")]);
+    box.innerHTML = "";
+    for (const s of builtins) {
+      const li = el("div", "list-item");
+      const badge = s.installed ? '<span class="pill ok">installed</span>' : '';
+      li.innerHTML = `<div class="grow"><div class="nm">${esc(s.name)} ${badge}</div>
+        <div class="sub">${esc(String(s.description || "").slice(0, 170))}</div>
+        <div class="sub"><code>${esc(s.install)}</code></div></div>`;
+      const btn = el("button", "btn sm primary");
+      btn.textContent = s.installed ? "Copy cmd" : "Install";
+      btn.addEventListener("click", async () => {
+        try {
+          if (!s.installed) await api(`/api/skills/builtins/${encodeURIComponent(s.id)}/install`, { method: "POST", body: {} });
+          try { await navigator.clipboard.writeText(s.install); } catch {}
+          toast("Command copied — run it in your terminal", "ok");
+          loadSkills();
+        } catch (e) { toast(e.message, "err"); }
+      });
+      li.appendChild(btn); box.appendChild(li);
+    }
+    if (!builtins.length) box.innerHTML = `<div class="empty"><b>No built-ins</b></div>`;
+
+    const installedBox = $("#skillInstalled"); installedBox.innerHTML = "";
+    if (!skills.length) { installedBox.innerHTML = `<div class="empty"><b>None yet</b></div>`; }
+    for (const s of skills) {
+      const li = el("div", "list-item");
+      li.innerHTML = `<div class="grow"><div class="nm">${esc(s.name)}</div><div class="sub"><code>${esc(s.installCommand)}</code></div></div>`;
+      const del = el("button", "btn sm danger"); del.textContent = "×";
+      del.addEventListener("click", async () => { try { await api(`/api/skills/${encodeURIComponent(s.id)}`, { method: "DELETE" }); loadSkills(); } catch (e) { toast(e.message, "err"); } });
+      li.appendChild(del); installedBox.appendChild(li);
+    }
+  } catch {}
+}
+
 /* ------------------------------------------------------------- usage */
 async function refreshUsage() {
   try {
@@ -597,7 +635,7 @@ function buildPalette(query) {
     { label: "Refresh files", sub: "workspace", run: loadTree },
     { label: "Toggle theme", sub: "appearance", run: toggleTheme },
     { label: "Save file", sub: "editor", run: saveFile },
-    ...Object.keys({ activity: 1, approvals: 1, subagents: 1, tools: 1, mcp: 1, usage: 1, prompt: 1, system: 1 }).map((v) => ({ label: `Panel: ${v}`, sub: "panel", run: () => selectPanel(v) }))
+    ...Object.keys({ activity: 1, approvals: 1, subagents: 1, tools: 1, mcp: 1, skills: 1, usage: 1, prompt: 1, system: 1 }).map((v) => ({ label: `Panel: ${v}`, sub: "panel", run: () => selectPanel(v) }))
   ].filter((c) => !q || c.label.toLowerCase().includes(q));
   const files = State.files.filter((f) => !q || f.path.toLowerCase().includes(q)).slice(0, 30).map((f) => ({ label: f.path, sub: "file", run: () => openFile(f.path) }));
   State.paletteItems = [...cmds, ...files];
@@ -627,6 +665,7 @@ function selectPanel(view) {
   if (view === "subagents") loadSubagents();
   if (view === "tools") loadTools();
   if (view === "mcp") loadMcp();
+  if (view === "skills") loadSkills();
   if (view === "system") loadSystem();
   if (view === "activity") { /* timeline already live */ }
 }
@@ -679,6 +718,7 @@ function bindEvents() {
   $("#refreshRuns").addEventListener("click", refreshRuns);
   $("#refreshApprovals").addEventListener("click", pollApprovals);
   $("#refreshMcp").addEventListener("click", loadMcp);
+  $("#refreshSkills")?.addEventListener("click", loadSkills);
   $("#refreshUsage").addEventListener("click", refreshUsage);
   $("#refreshSystem").addEventListener("click", loadSystem);
   $("#addTask").addEventListener("click", addTask);
@@ -723,7 +763,7 @@ async function init() {
   document.documentElement.dataset.theme = State.theme;
   bindEvents(); initResizers(); selectPanel("activity");
   connectStream();
-  await Promise.allSettled([loadTree(), loadAgents(), loadCommands(), loadTools(), loadMcp(), refreshRuns(), refreshTasks(), loadPrompt(), refreshUsage(), loadSubagents()]);
+  await Promise.allSettled([loadTree(), loadAgents(), loadCommands(), loadTools(), loadMcp(), loadSkills(), refreshRuns(), refreshTasks(), loadPrompt(), refreshUsage(), loadSubagents()]);
   pollApprovals();
   setInterval(pollApprovals, 5000);
   setInterval(refreshTasks, 4000);
