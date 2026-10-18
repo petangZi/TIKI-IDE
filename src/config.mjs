@@ -109,6 +109,8 @@ export function loadConfig({ env = process.env, argv = process.argv.slice(2) } =
       }
     },
     toolHttpAllowlist: allowlist,
-    publicApisEnabled: bool(env.TIKI_PUBLIC_APIS, true)
+    publicApisEnabled: bool(env.TIKI_PUBLIC_APIS, true),
+    mcpInitTimeoutMs: int(env.TIKI_MCP_INIT_TIMEOUT_MS, 90_000, { min: 1000, max: 600_000 }),
+    mcpTimeoutMs: int(env.TIKI_MCP_TIMEOUT_MS, 30_000, { min: 1000, max: 600_000 })
   });
 }

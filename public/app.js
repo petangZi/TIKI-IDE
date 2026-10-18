@@ -461,9 +461,16 @@ async function loadMcp() {
         <div class="sub">${esc(s.url || `${s.command} ${(s.args || []).join(" ")}`)} · ${esc(s.status)}</div></div>`;
       const connect = el("button", "btn sm"); connect.textContent = "Connect";
       connect.addEventListener("click", async () => { try { await api(`/api/mcp/servers/${s.id}/connect`, { method: "POST" }); const d = await api(`/api/mcp/servers/${s.id}/describe`); toast(`${d.tools.length} tools discovered`, "ok"); loadMcp(); } catch (e) { toast(e.message, "err"); } });
+      const trust = el("button", "btn sm ghost");
+      trust.textContent = s.trust === "trusted" ? "Untrust" : "Trust";
+      trust.title = s.trust === "trusted" ? "Tool calls allowed" : "Mark trusted to allow tool calls";
+      trust.addEventListener("click", async () => {
+        try { await api(`/api/mcp/servers/${s.id}`, { method: "PATCH", body: { trust: s.trust === "trusted" ? "untrusted" : "trusted" } }); loadMcp(); }
+        catch (e) { toast(e.message, "err"); }
+      });
       const del = el("button", "btn sm danger"); del.textContent = "×";
       del.addEventListener("click", async () => { await api(`/api/mcp/servers/${s.id}`, { method: "DELETE" }); loadMcp(); });
-      li.append(connect, del); list.appendChild(li);
+      li.append(connect, trust, del); list.appendChild(li);
     }
     refreshMcpBuiltins();
   } catch {}
@@ -478,7 +485,7 @@ async function refreshMcpBuiltins() {
       const transport = b.transport === "bundle" ? "bundle" : b.transport;
       const badge = b.installed ? '<span class="pill ok">installed</span>' : (b.transport !== "bundle" && !b.ready ? '<span class="pill warn">needs config</span>' : '');
       li.innerHTML = `<div class="grow"><div class="nm">${esc(b.name)} <span class="pill">${esc(transport)}</span> ${badge}</div>
-        <div class="sub">${esc(String(b.description || "").slice(0, 160))}</div></div>`;
+        <div class="sub">${esc(String(b.description || "").slice(0, 160))}</div>${b.note ? `<div class="sub">⚠ ${esc(String(b.note).slice(0, 200))}</div>` : ""}</div>`;
       if (b.transport === "bundle") {
         const btn = el("button", "btn sm"); btn.textContent = "Add children";
         btn.addEventListener("click", async () => {

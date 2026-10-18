@@ -10,6 +10,9 @@ import { listBuiltins as listBuiltinCatalog, resolveBuiltin } from "./builtins.m
 
 const PROTOCOL_VERSION = "2024-11-05";
 const DEFAULT_TIMEOUT = 20_000;
+// npx-launched servers can take a minute to cold-start (registry resolution +
+// first download), so the handshake gets a much larger budget than calls.
+const DEFAULT_INIT_TIMEOUT = 90_000;
 const MAX_MESSAGE_BYTES = 1_000_000;
 
 const CLIENT_INFO = { name: "tiki-ide", version: "1.0.0" };
@@ -17,9 +20,10 @@ const CLIENT_INFO = { name: "tiki-ide", version: "1.0.0" };
 function nowIso() { return new Date().toISOString(); }
 
 class StdioConnection {
-  constructor(spec, { logger }) {
+  constructor(spec, { logger, initTimeoutMs = DEFAULT_INIT_TIMEOUT }) {
     this.spec = spec;
     this.logger = logger;
+    this.initTimeoutMs = initTimeoutMs;
     this.child = null;
     this.buffer = "";
     this.nextId = 1;
@@ -54,7 +58,7 @@ class StdioConnection {
       protocolVersion: PROTOCOL_VERSION,
       capabilities: {},
       clientInfo: CLIENT_INFO
-    }, { timeoutMs: 15_000 });
+    }, { timeoutMs: this.initTimeoutMs });
     this.capabilities = init?.capabilities || {};
     this.serverInfo = init?.serverInfo || null;
     this.notify("notifications/initialized", {});
@@ -136,9 +140,10 @@ export function parseHttpMcpBody(text, contentType = "", id) {
 }
 
 class HttpConnection {
-  constructor(spec, { logger }) {
+  constructor(spec, { logger, initTimeoutMs = DEFAULT_INIT_TIMEOUT }) {
     this.spec = spec;
     this.logger = logger;
+    this.initTimeoutMs = initTimeoutMs;
     this.url = spec.url;
     this.nextId = 1;
     this.capabilities = null;
@@ -188,7 +193,7 @@ class HttpConnection {
     this.status = "connecting";
     const init = await this.post({ jsonrpc: "2.0", id: this.nextId++, method: "initialize", params: {
       protocolVersion: PROTOCOL_VERSION, capabilities: {}, clientInfo: CLIENT_INFO
-    } }, { timeoutMs: 15_000 });
+    } }, { timeoutMs: this.initTimeoutMs });
     this.capabilities = init?.capabilities || {};
     this.serverInfo = init?.serverInfo || null;
     await this.post({ jsonrpc: "2.0", method: "notifications/initialized", params: {} }, { expectReply: false }).catch(() => {});
@@ -216,7 +221,7 @@ function makeConnection(spec, deps) {
   return spec.transport === "http" ? new HttpConnection(spec, deps) : new StdioConnection(spec, deps);
 }
 
-export function createMcpManager({ store, logger = console, timeoutMs = DEFAULT_TIMEOUT } = {}) {
+export function createMcpManager({ store, logger = console, timeoutMs = DEFAULT_TIMEOUT, initTimeoutMs = DEFAULT_INIT_TIMEOUT } = {}) {
   const connections = new Map(); // serverId -> connection
 
   function doc() { return store.load("mcp", { version: 1, servers: [] }); }
@@ -292,6 +297,17 @@ export function createMcpManager({ store, logger = console, timeoutMs = DEFAULT_
     return doc().servers.find((s) => s.id === id) || null;
   }
 
+  function updateServer(id, patch = {}) {
+    const d = doc();
+    const server = d.servers.find((s) => s.id === id);
+    if (!server) throw new Error("MCP server not found");
+    if (patch.trust !== undefined) server.trust = patch.trust === "trusted" ? "trusted" : "untrusted";
+    if (patch.enabled !== undefined) server.enabled = patch.enabled !== false;
+    if (patch.name !== undefined) server.name = String(patch.name).slice(0, 80);
+    persist(d);
+    return server;
+  }
+
   function listBuiltins() {
     const installed = new Set(doc().servers.map((s) => s.id));
     return listBuiltinCatalog().map((entry) => ({
@@ -317,7 +333,7 @@ export function createMcpManager({ store, logger = console, timeoutMs = DEFAULT_
     if (!server) throw new Error("MCP server not found");
     if (!server.enabled) throw new Error("MCP server is disabled");
     if (connections.has(id) && connections.get(id).status === "connected") return connections.get(id);
-    const conn = makeConnection(server, { logger });
+    const conn = makeConnection(server, { logger, initTimeoutMs });
     connections.set(id, conn);
     try { await conn.connect(); return conn; }
     catch (error) { connections.delete(id); await conn.close(); throw error; }
@@ -359,5 +375,5 @@ export function createMcpManager({ store, logger = console, timeoutMs = DEFAULT_
     for (const [id, conn] of connections) { try { await conn.close(); } catch {} connections.delete(id); }
   }
 
-  return { listServers, addServer, removeServer, getServer, listBuiltins, installBuiltin, connect, disconnect, describe, callTool, closeAll, connections };
+  return { listServers, addServer, removeServer, getServer, updateServer, listBuiltins, installBuiltin, connect, disconnect, describe, callTool, closeAll, connections };
 }

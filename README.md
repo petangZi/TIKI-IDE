@@ -116,6 +116,9 @@ are not persisted.
 - Built-in **skills** (Ponytail, Caveman, OpenSpec) live in the Skills panel:
   the IDE records the choice and surfaces the exact install command to run — it
   never executes the installer itself. See `POST /api/skills/builtins/:id/install`.
+- npx-launched MCP servers cold-start slowly (registry resolution + first
+  download), so the MCP handshake budget is 90s by default and calls get 30s:
+  `TIKI_MCP_INIT_TIMEOUT_MS`, `TIKI_MCP_TIMEOUT_MS`.
 
 ### Tool runtime and the public-API gateway
 

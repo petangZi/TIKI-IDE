@@ -140,6 +140,10 @@ async function main() {
   check("POST /api/skills/builtins/:id/install", skillInstall.status === 201 && skillInstall.data.skill.id === "caveman", `status ${skillInstall.status}`);
   const skillDel = await json("DELETE", "/api/skills/caveman");
   check("DELETE /api/skills/:id", skillDel.status === 200 && skillDel.data.skills.length === 0, `${skillDel.data?.skills?.length} skills`);
+  const mcpTrust = await json("POST", "/api/mcp/servers", { name: "smoke-trust", command: "node", args: ["-e", "0"], trust: "untrusted" });
+  const patched = await json("PATCH", `/api/mcp/servers/${mcpTrust.data.server.id}`, { trust: "trusted" });
+  check("PATCH /api/mcp/servers/:id", patched.status === 200 && patched.data.server.trust === "trusted", `trust ${patched.data?.server?.trust}`);
+  await json("DELETE", `/api/mcp/servers/${mcpTrust.data.server.id}`);
 
   const prompt = await json("GET", "/api/system-prompt");
   check("GET /api/system-prompt", prompt.status === 200 && prompt.data.corePrompt.length > 50, `v${prompt.data?.version}`);

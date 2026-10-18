@@ -82,6 +82,7 @@ Diff report shape: `{ snapshot_id, generated_at, counts: { added, modified, dele
 | GET | `/api/mcp/builtins` | `{ builtins }` — curated catalog with `installed` / `ready` / `missingEnv` |
 | POST | `/api/mcp/builtins/:id/install` | body `{ trust?, env?, cwd? }` → `201 { server, servers }` |
 | DELETE | `/api/mcp/servers/:id` | `{ servers }` |
+| PATCH | `/api/mcp/servers/:id` | body `{ trust?, enabled?, name? }` → `{ server, servers }` |
 | POST | `/api/mcp/servers/:id/connect` | `{ ok, servers }` |
 | POST | `/api/mcp/servers/:id/disconnect` | `{ id, status, servers }` |
 | GET | `/api/mcp/servers/:id/describe` | `{ id, serverInfo, capabilities, tools, resources, prompts }` |

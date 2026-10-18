@@ -247,6 +247,7 @@ export const BUILTIN_MCP_SERVERS = [
     env: {},
     requires: ["npx"],
     install: "npx lightswind mcp init   (auto-configures Cursor / Claude Desktop)",
+    note: "The published CLI (3.2.5) ships dist/mcp/index.js without declaring @modelcontextprotocol/sdk, so `npx lightswind mcp` exits with MODULE_NOT_FOUND. Install @modelcontextprotocol/sdk next to it, or run from a local checkout.",
     docs: "https://github.com/codewithMUHILAN/Lightswind-UI-Library",
     tags: ["frontend", "ui", "components", "tailwind", "react"],
     defaultTrust: "untrusted"
@@ -278,6 +279,7 @@ export function listBuiltins({ source = process.env } = {}) {
     transport: entry.transport,
     docs: entry.docs,
     install: entry.install,
+    note: entry.note || null,
     tags: entry.tags || [],
     requires: entry.requires || [],
     defaultTrust: entry.defaultTrust || "untrusted",

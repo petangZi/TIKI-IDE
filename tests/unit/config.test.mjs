@@ -47,3 +47,13 @@ test("config is frozen", () => {
   const config = loadConfig({ env: { TIKI_WORKSPACE: workspace(), TIKI_DATA_DIR: fs.mkdtempSync(path.join(os.tmpdir(), "tiki-d-")) }, argv: [] });
   assert.equal(Object.isFrozen(config), true);
 });
+
+test("MCP timeouts have safe defaults and accept overrides", () => {
+  const base = loadConfig({ env: { TIKI_WORKSPACE: workspace(), TIKI_DATA_DIR: fs.mkdtempSync(path.join(os.tmpdir(), "tiki-d-")) }, argv: [] });
+  assert.equal(base.mcpInitTimeoutMs, 90_000);
+  assert.equal(base.mcpTimeoutMs, 30_000);
+  const custom = loadConfig({ env: { TIKI_WORKSPACE: workspace(), TIKI_DATA_DIR: fs.mkdtempSync(path.join(os.tmpdir(), "tiki-d-")), TIKI_MCP_INIT_TIMEOUT_MS: "120000", TIKI_MCP_TIMEOUT_MS: "5000" }, argv: [] });
+  assert.equal(custom.mcpInitTimeoutMs, 120_000);
+  assert.equal(custom.mcpTimeoutMs, 5_000);
+  assert.throws(() => loadConfig({ env: { TIKI_WORKSPACE: workspace(), TIKI_MCP_INIT_TIMEOUT_MS: "0" }, argv: [] }), (e) => e instanceof ConfigError);
+});

@@ -52,7 +52,7 @@ export function buildServices(config, logger) {
   const prices = createPriceCatalog({ store, logger });
   const usage = createUsageLedger({ store, prices, logger });
   const tools = createToolRegistry({ config, logger, audit });
-  const mcp = createMcpManager({ store, logger });
+  const mcp = createMcpManager({ store, logger, timeoutMs: config.mcpTimeoutMs, initTimeoutMs: config.mcpInitTimeoutMs });
   const skills = createSkillManager({ store });
   const subagents = createSubagentRegistry({ store, adapters, logger });
   const orchestrator = createOrchestrator({ config, bus, adapters, runs, workspace, snapshots, usage, policy, promptManager, logger });

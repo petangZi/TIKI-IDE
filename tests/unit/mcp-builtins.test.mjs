@@ -132,6 +132,20 @@ test("key-gated built-ins report readiness correctly", () => {
   assert.equal(listBuiltins({ source: {} }).find((e) => e.id === "frontend-inspo").ready, true);
 });
 
+test("updateServer toggles trust without touching the launch spec", async () => {
+  await withManager((mcp) => {
+    mcp.installBuiltin("context7");
+    const before = mcp.getServer("context7");
+    assert.equal(before.trust, "untrusted");
+    const updated = mcp.updateServer("context7", { trust: "trusted" });
+    assert.equal(updated.trust, "trusted");
+    assert.equal(updated.command, before.command);
+    assert.deepEqual(updated.args, before.args);
+    assert.equal(mcp.updateServer("context7", { trust: "whatever" }).trust, "untrusted");
+    assert.throws(() => mcp.updateServer("ghost", { trust: "trusted" }), /not found/);
+  });
+});
+
 test("manager rejects an unknown built-in", async () => {
   await withManager((mcp) => {
     assert.throws(() => mcp.installBuiltin("does-not-exist"), /Unknown built-in/);

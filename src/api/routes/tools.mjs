@@ -49,6 +49,12 @@ export function registerToolRoutes(router, services) {
     return { __status: 201, body: { server, servers: mcp.listServers() } };
   });
   router.delete("/api/mcp/servers/:id", (ctx) => ({ servers: mcp.removeServer(ctx.params.id) }));
+  router.patch("/api/mcp/servers/:id", async (ctx) => {
+    const body = await ctx.readBody();
+    const server = mcp.updateServer(ctx.params.id, body);
+    audit.record({ actor: "user", action: "mcp.server.update", target: server.name });
+    return { server, servers: mcp.listServers() };
+  });
   router.post("/api/mcp/servers/:id/connect", async (ctx) => {
     await mcp.connect(ctx.params.id);
     return { ok: true, servers: mcp.listServers() };
