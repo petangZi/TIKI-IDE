@@ -19,6 +19,7 @@
     "test:integration": "node --test tests/integration/*.test.mjs",
     "test:smoke": "node scripts/smoke.mjs",
     "build:public-apis": "node scripts/build-public-apis.mjs",
-    "mcp:live": "node scripts/mcp-live.mjs"
+    "mcp:live": "node scripts/mcp-live.mjs",
+    "ui:live": "node scripts/ui-live.mjs"
   }
 }

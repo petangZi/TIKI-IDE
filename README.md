@@ -49,7 +49,17 @@ npm run test:unit
 npm run test:integration
 npm run test:smoke # end-to-end HTTP smoke against a live ephemeral server
 npm run build:public-apis # refresh the curated public-apis catalog from upstream
+npm run mcp:live   # install and describe the real built-in MCP servers (needs network)
+npm run ui:live    # drive the UI in a browser against a running server (needs Playwright)
 ```
+
+`mcp:live` and `ui:live` are the network-backed counterparts to the offline
+suites: the first spawns real MCP servers and reports the tools each one
+exposes, the second walks the MCP and Skills panels, toggles trust, and audits
+layout. Neither runs in CI. `ui:live` expects Playwright outside this
+zero-dependency tree — see the header of `scripts/ui-live.mjs`. A musl host
+cannot run Playwright's bundled Chromium, so point `TIKI_CHROMIUM` at the
+system browser.
 
 ## Architecture
 
