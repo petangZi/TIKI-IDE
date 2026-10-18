@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d0f14">
+  <title>TIKI Universal IDE</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app" id="app">
+
+    <!-- ======================= RAIL ======================= -->
+    <aside class="rail" aria-label="Workspace">
+      <div class="brand">
+        <div class="brand-mark">T</div>
+        <div class="brand-text"><b>TIKI <span>IDE</span></b><small>Universal Workspace</small></div>
+        <button class="icon-btn" id="collapseRail" title="Collapse (Ctrl+B)" aria-label="Collapse sidebar" style="margin-left:auto">‹</button>
+      </div>
+      <div class="rail-body">
+        <div class="ws-card">
+          <div class="section-head" style="padding:0 0 6px"><span class="label">Workspace</span></div>
+          <div class="ws-path mono" id="wsPath">Loading…</div>
+          <div class="ws-meta">
+            <span class="pill accent" id="wsFiles">0 files</span>
+            <span class="pill" id="wsRuntime">—</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-head">
+            <span class="label">Explorer</span>
+            <span class="tools">
+              <button class="icon-btn" id="newFileBtn" title="New file" aria-label="New file">＋</button>
+              <button class="icon-btn" id="refreshTree" title="Refresh" aria-label="Refresh files">↻</button>
+            </span>
+          </div>
+          <div class="field-row" style="margin-bottom:8px">
+            <input class="input" id="fileFilter" placeholder="Filter or search…" aria-label="Filter files">
+          </div>
+          <div class="tree" id="fileTree"><div class="empty"><div class="ei">⌁</div><b>Scanning…</b></div></div>
+        </div>
+      </div>
+      <div class="rail-foot">
+        <span class="dot-live" id="connDot"></span>
+        <span id="connText">Connecting…</span>
+        <button class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme" style="margin-left:auto">◐</button>
+      </div>
+    </aside>
+
+    <div class="resizer" id="railResizer" role="separator" aria-orientation="vertical" aria-label="Resize sidebar"></div>
+
+    <!-- ======================= MAIN ======================= -->
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-btn hidden" id="openRail" title="Show sidebar" aria-label="Show sidebar">›</button>
+        <div class="crumbs">
+          <span>Workspace</span><span class="sep">/</span><b id="crumb">Agent Console</b>
+        </div>
+        <div class="top-actions">
+          <button class="btn sm ghost" id="paletteBtn" title="Command palette"><span class="kbd">⌘K</span></button>
+          <span class="pill" id="authPill">local</span>
+          <button class="btn sm" id="detectBtn">Detect agents ↻</button>
+          <button class="icon-btn hidden" id="openPanel" title="Show panel" aria-label="Show panel">☰</button>
+        </div>
+      </header>
+
+      <div class="tabs" id="tabs" role="tablist"></div>
+
+      <div class="workspace-area">
+        <!-- Console view -->
+        <section class="view" id="view-console" role="tabpanel" aria-label="Agent console">
+          <div class="console-wrap">
+            <div class="hero">
+              <span class="eyebrow">✦ Universal agent workspace</span>
+              <h1>Build something<br><em>that matters.</em></h1>
+              <p>One workspace. Multiple agent engines. Observable runs, verifiable diffs, your machine.</p>
+            </div>
+            <div class="agent-strip" id="agents"><div class="empty" style="padding:16px"><b>Detecting engines…</b></div></div>
+            <div class="composer">
+              <div class="row"><span>NEW TASK</span><span id="selAgentLabel">Agent: —</span></div>
+              <textarea id="prompt" placeholder="Describe what to build, inspect, fix, or test. Ctrl+Enter to run." aria-label="Task prompt"></textarea>
+              <div class="actions">
+                <span class="hint">Runs are streamed live. Start small and clear.</span>
+                <label class="pill" style="cursor:pointer" title="Queue instead of running inline"><input type="checkbox" id="queueMode" style="margin-right:4px">Queue</label>
+                <button class="btn primary" id="sendPrompt">Run agent <span>↗</span></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Editor view -->
+        <section class="view" id="view-editor" hidden role="tabpanel" aria-label="Editor">
+          <div class="editor-shell">
+            <div class="editor-bar">
+              <span class="fpath" id="editorPath">No file</span>
+              <span class="pill" id="editorBadge">read-only</span>
+              <span style="margin-left:auto"></span>
+              <button class="btn sm" id="saveFile">Save</button>
+            </div>
+            <div class="editor-area">
+              <div class="gutter" id="gutter"></div>
+              <div class="code-area"><textarea class="editor" id="editor" spellcheck="false" wrap="off" aria-label="File editor"></textarea></div>
+            </div>
+            <div class="editor-status">
+              <span id="editorInfo">—</span>
+              <span id="editorDirty"></span>
+              <span style="margin-left:auto" id="editorCursor">Ln 1, Col 1</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Diff view -->
+        <section class="view" id="view-diff" hidden role="tabpanel" aria-label="Diff">
+          <div class="panel-body" id="diffBody">
+            <div class="empty"><div class="ei">≋</div><b>No diff captured yet</b><p>Run an agent, then open Diff to review changes against the run baseline.</p></div>
+          </div>
+        </section>
+
+        <!-- Terminal view -->
+        <section class="view" id="view-terminal" hidden role="tabpanel" aria-label="Terminal">
+          <div class="panel-body" style="height:100%">
+            <div class="card">
+              <div class="card-head">
+                <b>Command runner</b>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <select class="select" id="cmdSelect" aria-label="Allowed command"></select>
+                  <button class="btn sm primary" id="runCmd">Run</button>
+                  <button class="btn sm ghost" id="clearTerm">Clear</button>
+                </div>
+              </div>
+              <div class="card-body" style="padding:0"><div class="terminal" id="terminal">Allowlisted commands only. Arbitrary shell input is rejected server-side.</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tasks view -->
+        <section class="view" id="view-tasks" hidden role="tabpanel" aria-label="Tasks">
+          <div class="panel-body">
+            <div class="card">
+              <div class="card-head"><b>Task board</b><span class="pill" id="taskStats">0 tasks</span></div>
+              <div class="card-body">
+                <div class="field-row" style="margin-bottom:10px">
+                  <input class="input" id="taskTitle" placeholder="Task title (optional)">
+                  <select class="select" id="taskAgent" aria-label="Task agent"></select>
+                </div>
+                <textarea class="field" id="taskPrompt" placeholder="Task prompt" style="min-height:64px"></textarea>
+                <div style="display:flex;gap:8px;margin-top:10px">
+                  <input class="input" id="taskDeps" placeholder="Depends on: task_id, task_id" style="flex:2">
+                  <button class="btn primary" id="addTask" style="flex:1">Queue task</button>
+                </div>
+              </div>
+            </div>
+            <div class="board" id="board"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <div class="resizer" id="panelResizer" role="separator" aria-orientation="vertical" aria-label="Resize panel"></div>
+
+    <!-- ======================= PANEL ======================= -->
+    <aside class="panel" aria-label="Inspector panel">
+      <div class="panel-tabs" id="panelTabs" role="tablist">
+        <button class="ptab active" data-view="agent">Agent</button>
+        <button class="ptab" data-view="activity">Activity</button>
+        <button class="ptab" data-view="approvals">Approvals <span class="pill err hidden" id="approvalCount">0</span></button>
+        <button class="ptab" data-view="subagents">Sub-agents</button>
+        <button class="ptab" data-view="tools">Tools</button>
+        <button class="ptab" data-view="mcp">MCP</button>
+        <button class="ptab" data-view="usage">Usage</button>
+        <button class="ptab" data-view="prompt">Prompt</button>
+        <button class="ptab" data-view="system">System</button>
+      </div>
+      <div class="panel-body">
+        <!-- Agent -->
+        <div class="panel-view" data-view="agent">
+          <div class="card">
+            <div class="card-head"><b>Connect engines</b><button class="btn sm ghost" id="detectBtn2">Detect</button></div>
+            <div class="card-body"><div class="list" id="agentPanelList"><div class="empty"><b>Detecting…</b></div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><b>Recent runs</b><button class="btn sm ghost" id="refreshRuns">↻</button></div>
+            <div class="card-body"><div class="list" id="runsList"><div class="empty"><b>No runs yet</b></div></div></div>
+          </div>
+        </div>
+
+        <!-- Activity -->
+        <div class="panel-view" data-view="activity" hidden>
+          <div class="card" style="flex:1">
+            <div class="card-head">
+              <b>Live activity</b>
+              <div style="display:flex;gap:6px;align-items:center">
+                <span class="dot-live" id="streamDot"></span>
+                <select class="select" id="activityFilter" style="width:auto;padding:3px 24px 3px 8px">
+                  <option value="">All events</option>
+                  <option value="run">Runs</option>
+                  <option value="agent">Agent</option>
+                  <option value="tool">Tools</option>
+                  <option value="file">Files</option>
+                  <option value="usage">Usage</option>
+                </select>
+                <button class="btn sm ghost" id="clearActivity">Clear</button>
+              </div>
+            </div>
+            <div class="timeline" id="timeline" style="height:auto;max-height:calc(100vh - 200px)">
+              <div class="empty"><div class="ei">⌁</div><b>Agent activity appears here</b><p>Start a run to see live, truthful events.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approvals -->
+        <div class="panel-view" data-view="approvals" hidden>
+          <div class="card">
+            <div class="card-head"><b>Approval inbox</b><button class="btn sm ghost" id="refreshApprovals">↻</button></div>
+            <div class="card-body"><div class="list" id="approvalsList"><div class="empty"><b>No pending approvals</b></div></div></div>
+          </div>
+        </div>
+
+        <!-- Sub-agents -->
+        <div class="panel-view" data-view="subagents" hidden>
+          <div class="card">
+            <div class="card-head"><b>Add sub-agent</b></div>
+            <div class="card-body">
+              <div class="field-row" style="margin-bottom:8px">
+                <input class="input" id="saName" placeholder="Name (e.g. UI Reviewer)">
+                <input class="input" id="saModel" placeholder="Model (optional)">
+              </div>
+              <div class="field-row" style="margin-bottom:8px">
+                <select class="select" id="saRole"><option value="general">general</option><option value="planner">planner</option><option value="worker">worker</option><option value="reviewer">reviewer</option><option value="tester">tester</option></select>
+                <select class="select" id="saAdapter"></select>
+              </div>
+              <button class="btn primary block" id="addSubagent">+ Add sub-agent</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><b>Registered sub-agents</b></div>
+            <div class="card-body"><div class="list" id="subagentsList"><div class="empty"><b>None yet</b></div></div></div>
+          </div>
+        </div>
+
+        <!-- Tools -->
+        <div class="panel-view" data-view="tools" hidden>
+          <div class="card">
+            <div class="card-head"><b>Non-AI tools</b></div>
+            <div class="card-body">
+              <div class="card-desc">Independent connectors. Network tools validate destinations and keep keys server-side.</div>
+              <div class="list" id="toolsList"><div class="empty"><b>Loading…</b></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><b>Invoke</b></div>
+            <div class="card-body">
+              <select class="select" id="toolSelect" style="margin-bottom:8px" aria-label="Tool"></select>
+              <textarea class="field" id="toolArgs" placeholder='{"city":"Jakarta"}' style="min-height:70px"></textarea>
+              <button class="btn primary block" id="invokeTool" style="margin-top:8px">Invoke tool</button>
+              <pre class="field mono" id="toolResult" style="margin-top:8px;max-height:220px;overflow:auto;white-space:pre-wrap">—</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- MCP -->
+        <div class="panel-view" data-view="mcp" hidden>
+          <div class="card">
+            <div class="card-head"><b>Add MCP server</b></div>
+            <div class="card-body">
+              <input class="input" id="mcpName" placeholder="Name" style="margin-bottom:8px">
+              <input class="input" id="mcpCommand" placeholder="Command (e.g. npx)" style="margin-bottom:8px">
+              <input class="input" id="mcpArgs" placeholder="Args, comma separated" style="margin-bottom:8px">
+              <label class="small muted" style="display:flex;gap:6px;align-items:center;margin-bottom:8px"><input type="checkbox" id="mcpTrust"> Mark trusted (allows tool calls)</label>
+              <button class="btn primary block" id="addMcp">+ Add server</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><b>Servers</b><button class="btn sm ghost" id="refreshMcp">↻</button></div>
+            <div class="card-body"><div class="list" id="mcpList"><div class="empty"><b>No MCP servers</b></div></div></div>
+          </div>
+        </div>
+
+        <!-- Usage -->
+        <div class="panel-view" data-view="usage" hidden>
+          <div class="card">
+            <div class="card-head"><b>Usage &amp; cost</b><button class="btn sm ghost" id="refreshUsage">↻</button></div>
+            <div class="card-body">
+              <div class="stat-grid" id="usageStats"></div>
+              <div style="display:flex;gap:6px;align-items:center;margin-top:12px">
+                <span class="small muted">Markup</span>
+                <input class="input" id="markupInput" type="number" step="0.1" min="1" style="width:90px">
+                <button class="btn sm" id="saveMarkup">Save</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><b>Ledger</b></div>
+            <div class="card-body"><div class="list" id="usageList"><div class="empty"><b>No usage recorded</b></div></div></div>
+          </div>
+        </div>
+
+        <!-- Prompt -->
+        <div class="panel-view" data-view="prompt" hidden>
+          <div class="card">
+            <div class="card-head"><b>TIKI core prompt</b><span class="pill accent" id="promptVersion">—</span></div>
+            <div class="card-body">
+              <div class="card-desc">TIKI owns the product prompt. Providers are execution backends.</div>
+              <details class="prompt-view"><summary>View base instructions</summary><pre id="corePrompt">Loading…</pre></details>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><b>Custom instructions</b></div>
+            <div class="card-body">
+              <textarea class="field" id="customPrompt" maxlength="30000" placeholder="Project conventions, preferred language, testing rules…"></textarea>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+                <span class="tiny muted" id="promptChars">0 / 30,000</span>
+                <button class="btn sm" id="savePrompt">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System -->
+        <div class="panel-view" data-view="system" hidden>
+          <div class="card">
+            <div class="card-head"><b>Runtime &amp; security</b><button class="btn sm ghost" id="refreshSystem">↻</button></div>
+            <div class="card-body"><dl class="kv" id="systemKv"></dl></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><b>Audit log</b></div>
+            <div class="card-body"><div class="list" id="auditList"><div class="empty"><b>No records</b></div></div></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Overlays -->
+  <div class="overlay" id="paletteOverlay" hidden>
+    <div class="palette" role="dialog" aria-label="Command palette">
+      <input id="paletteInput" placeholder="Type a command or file…" autocomplete="off" aria-label="Command input">
+      <div class="palette-list" id="paletteList"></div>
+    </div>
+  </div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

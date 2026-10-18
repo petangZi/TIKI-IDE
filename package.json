@@ -1,0 +1,18 @@
+{
+  "name": "tiki-universal-ide",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local-first universal AI agent workspace — full-stack continuation",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "bin": { "tiki-ide": "./server.mjs" },
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "TIKI_LOG_LEVEL=debug node server.mjs",
+    "check": "node scripts/check.mjs",
+    "test": "node --test tests/unit/*.test.mjs tests/integration/*.test.mjs",
+    "test:unit": "node --test tests/unit/*.test.mjs",
+    "test:integration": "node --test tests/integration/*.test.mjs",
+    "test:smoke": "node scripts/smoke.mjs"
+  }
+}
