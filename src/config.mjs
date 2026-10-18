@@ -108,6 +108,7 @@ export function loadConfig({ env = process.env, argv = process.argv.slice(2) } =
         model: str(env.OPENCLAW_MODEL, "openclaw/default")
       }
     },
-    toolHttpAllowlist: allowlist
+    toolHttpAllowlist: allowlist,
+    publicApisEnabled: bool(env.TIKI_PUBLIC_APIS, true)
   });
 }

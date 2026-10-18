@@ -75,6 +75,8 @@ Diff report shape: `{ snapshot_id, generated_at, counts: { added, modified, dele
 | GET | `/api/tools` | `{ tools: [{ id, version, label, category, network, inputSchema, ... }] }` |
 | GET | `/api/tools/catalog` | `{ categories, tools }` |
 | POST | `/api/tools/:id/invoke` | body `{ args }` → `{ tool, version, duration_ms, ok, data, provenance }` |
+| GET | `/api/public-apis?query=&category=&auth=&httpsOnly=&limit=&offset=` | search the curated public-apis catalog |
+| GET | `/api/public-apis/stats` | `{ count, categories, https, by_category, by_auth, source, generated_at }` |
 | GET | `/api/mcp/servers` | `{ servers }` |
 | POST | `/api/mcp/servers` | body `{ name, command, args?, trust? }` → `201 { server, servers }` |
 | DELETE | `/api/mcp/servers/:id` | `{ servers }` |
@@ -82,6 +84,17 @@ Diff report shape: `{ snapshot_id, generated_at, counts: { added, modified, dele
 | POST | `/api/mcp/servers/:id/disconnect` | `{ id, status, servers }` |
 | GET | `/api/mcp/servers/:id/describe` | `{ id, serverInfo, capabilities, tools, resources, prompts }` |
 | POST | `/api/mcp/servers/:id/call` | body `{ tool, args }` → tool result (redacted) |
+
+### Built-in tool ids
+
+| id | network | notes |
+| --- | --- | --- |
+| `mock.echo` | no | `{ value }` → `{ echoed }`. Offline. |
+| `weather.current` | yes | Open-Meteo. |
+| `http.get` | allowlist | Confined to `TIKI_TOOL_HTTP_ALLOWLIST`. |
+| `public_api.search` | no | `{ query?, category?, auth?, httpsOnly?, limit?, offset? }` → catalog matches. |
+| `public_api.describe` | no | `{ id }` → one catalog record. |
+| `public_api.call` | catalog | `{ id?, url?, path?, query?, headers?, maxBytes? }` → HTTPS call; host must be catalog-declared; SSRF-guarded. |
 
 ## Prompt & prices
 

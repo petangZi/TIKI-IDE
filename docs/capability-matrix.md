@@ -44,6 +44,7 @@ limits), **na** (not applicable to a local-first build).
 | MCP | Trust gating + output redaction | done | Untrusted servers cannot be invoked. |
 | Tools | Schema-validated runtime | done | Input + output validation, timeouts. |
 | Tools | Built-in tools | done | `mock.echo`, `weather.current`, `http.get`. |
+| Tools | Public-API gateway | done | 2153 curated APIs/51 categories; `public_api.search/describe/call`; HTTPS + SSRF + size guarded. |
 | API | Dependency-free router | done | `:params`, central body parsing. |
 | UI | Dependency-free single-page app | done | No framework, no build step. |
 | UI | Explorer + multi-tab editor | done | Gutter, dirty state, save. |

@@ -36,6 +36,7 @@ Configuration is environment-only (no `.env` auto-load). See `.env.example`.
 | `HERMES_URL` / `HERMES_API_KEY` | `http://127.0.0.1:8642/v1` | Hermes OpenAI-compatible endpoint. |
 | `OPENCLAW_URL` / `OPENCLAW_API_KEY` | `http://127.0.0.1:18789/v1` | OpenClaw endpoint. |
 | `TIKI_TOOL_HTTP_ALLOWLIST` | empty (deny all) | Hosts the generic `http.get` tool may reach. |
+| `TIKI_PUBLIC_APIS` | `1` | Enables the `public_api.*` tools (curated public-API gateway). |
 
 ## Commands
 
@@ -47,6 +48,7 @@ npm test           # unit + integration suites (node:test)
 npm run test:unit
 npm run test:integration
 npm run test:smoke # end-to-end HTTP smoke against a live ephemeral server
+npm run build:public-apis # refresh the curated public-apis catalog from upstream
 ```
 
 ## Architecture
@@ -104,6 +106,29 @@ are not persisted.
   forge cross-origin.
 - MCP servers are treated as untrusted until marked trusted; their output is
   redacted before it reaches the UI.
+
+### Tool runtime and the public-API gateway
+
+Tools are the AI's non-AI hands: schema-validated, timed out, provenance-tagged,
+and audited. Three built-ins ship enabled, plus a curated public-API gateway
+generated from [public-apis](https://github.com/public-apis/public-apis):
+
+| Tool | Network | Purpose |
+| --- | --- | --- |
+| `mock.echo` | no | Deterministic offline echo for pipeline tests. |
+| `weather.current` | yes | Open-Meteo forecast/current weather. |
+| `http.get` | allowlist | Generic GET confined to `TIKI_TOOL_HTTP_ALLOWLIST`. |
+| `public_api.search` | no | Search **2153** curated public APIs across 51 categories. |
+| `public_api.describe` | no | Full catalog record (auth/HTTPS/CORS/host) for one id. |
+| `public_api.call` | catalog | Call a catalog API over HTTPS, SSRF-guarded. |
+
+`public_api.call` is a gateway, not an open proxy. A request is refused unless
+the destination host is declared by the catalog (or the configured allowlist),
+must use HTTPS, and still passes the SSRF guard — private/loopback/link-local
+addresses are always blocked, responses are size-capped and timed out. The
+catalog lives at `src/tools/public-apis/catalog.json` and is regenerated with
+`npm run build:public-apis`. Browse it at `GET /api/public-apis` or via the
+Tools panel in the UI.
 
 ### Prompt ownership
 

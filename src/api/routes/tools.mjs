@@ -1,11 +1,23 @@
 // src/api/routes/tools.mjs
 import { ApiError } from "../respond.mjs";
+import { search as searchPublicApis, stats as publicApiStats } from "../../tools/public-apis/catalog.mjs";
 
 export function registerToolRoutes(router, services) {
   const { tools, mcp, prices, bus, audit } = services;
 
   router.get("/api/tools", () => ({ tools: tools.list() }));
   router.get("/api/tools/catalog", () => ({ categories: tools.catalog(), tools: tools.list() }));
+
+  // --- Curated public APIs (browse the catalog the AI can call) ---
+  router.get("/api/public-apis/stats", () => publicApiStats());
+  router.get("/api/public-apis", (ctx) => searchPublicApis({
+    query: ctx.query.get("query") || ctx.query.get("q") || "",
+    category: ctx.query.get("category") || "",
+    auth: ctx.query.get("auth") || "",
+    httpsOnly: ["1", "true", "yes"].includes((ctx.query.get("httpsOnly") || "").toLowerCase()),
+    limit: Number(ctx.query.get("limit")) || 20,
+    offset: Number(ctx.query.get("offset")) || 0
+  }));
   router.post("/api/tools/:id/invoke", async (ctx) => {
     const body = await ctx.readBody();
     bus.emitSafe({ type: "tool.requested", payload: { tool: ctx.params.id }, text: `Tool requested: ${ctx.params.id}` });

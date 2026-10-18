@@ -5,6 +5,7 @@ import { validateSchema } from "./schema.mjs";
 import { mockProvider } from "./providers/mock.mjs";
 import { weatherProvider } from "./providers/weather.mjs";
 import { createHttpProvider } from "./providers/http.mjs";
+import { createPublicApiProvider } from "./providers/public-api.mjs";
 
 export function createToolRegistry({ config, logger = console, audit = null } = {}) {
   const tools = new Map();
@@ -18,6 +19,9 @@ export function createToolRegistry({ config, logger = console, audit = null } = 
   register(mockProvider);
   register(weatherProvider);
   register(createHttpProvider({ allowlist: config.toolHttpAllowlist }));
+  for (const tool of createPublicApiProvider({ allowlist: config.toolHttpAllowlist, enabled: config.publicApisEnabled })) {
+    register(tool);
+  }
 
   function get(id) { return tools.get(id) || null; }
 

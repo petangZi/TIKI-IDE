@@ -75,6 +75,18 @@ async function main() {
   const badTool = await json("POST", "/api/tools/mock.echo/invoke", { args: {} });
   check("tool input schema rejects bad args", badTool.status === 400, `status ${badTool.status}`);
 
+  const apiStats = await json("GET", "/api/public-apis/stats");
+  check("GET /api/public-apis/stats", apiStats.status === 200 && apiStats.data.count > 500, `${apiStats.data?.count} apis`);
+
+  const apiSearch = await json("GET", "/api/public-apis?query=cat&limit=3");
+  check("GET /api/public-apis searches", apiSearch.status === 200 && apiSearch.data.results?.length > 0, `${apiSearch.data?.count} hits`);
+
+  const apiTool = await json("POST", "/api/tools/public_api.search/invoke", { args: { category: "Animals", limit: 3 } });
+  check("public_api.search tool", apiTool.status === 200 && apiTool.data.data?.count > 0, `${apiTool.data?.data?.count} rows`);
+
+  const apiBlocked = await json("POST", "/api/tools/public_api.call/invoke", { args: { url: "https://example.com/x" } });
+  check("public_api.call blocks non-catalog host", apiBlocked.status === 403, `status ${apiBlocked.status}`);
+
   const chat = await json("POST", "/api/chat", { agent: "mock", prompt: "smoke test" });
   check("POST /api/chat completes run", chat.status === 200 && chat.data.status === "completed" && typeof chat.data.answer === "string", chat.data?.status);
 
