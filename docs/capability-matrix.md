@@ -41,6 +41,8 @@ limits), **na** (not applicable to a local-first build).
 | Prompt | TIKI-owned prompt composition | done | Version fingerprint emitted. |
 | Prompt | Custom instructions (capped) | done | 30,000 chars, 0600 override file. |
 | MCP | stdio JSON-RPC client | done | initialize / tools / resources / prompts. |
+| MCP | Streamable HTTP transport | done | POST JSON-RPC; JSON or SSE responses. |
+| MCP | Built-in server catalog | done | Six curated servers, one-click install, env-gated readiness. |
 | MCP | Trust gating + output redaction | done | Untrusted servers cannot be invoked. |
 | Tools | Schema-validated runtime | done | Input + output validation, timeouts. |
 | Tools | Built-in tools | done | `mock.echo`, `weather.current`, `http.get`. |

@@ -78,7 +78,9 @@ Diff report shape: `{ snapshot_id, generated_at, counts: { added, modified, dele
 | GET | `/api/public-apis?query=&category=&auth=&httpsOnly=&limit=&offset=` | search the curated public-apis catalog |
 | GET | `/api/public-apis/stats` | `{ count, categories, https, by_category, by_auth, source, generated_at }` |
 | GET | `/api/mcp/servers` | `{ servers }` |
-| POST | `/api/mcp/servers` | body `{ name, command, args?, trust? }` → `201 { server, servers }` |
+| POST | `/api/mcp/servers` | body `{ name, command, args?, trust? }` (stdio) or `{ name, transport:"http", url, headers?, trust? }` → `201 { server, servers }` |
+| GET | `/api/mcp/builtins` | `{ builtins }` — curated catalog with `installed` / `ready` / `missingEnv` |
+| POST | `/api/mcp/builtins/:id/install` | body `{ trust?, env?, cwd? }` → `201 { server, servers }` |
 | DELETE | `/api/mcp/servers/:id` | `{ servers }` |
 | POST | `/api/mcp/servers/:id/connect` | `{ ok, servers }` |
 | POST | `/api/mcp/servers/:id/disconnect` | `{ id, status, servers }` |

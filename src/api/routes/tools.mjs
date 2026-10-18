@@ -33,6 +33,14 @@ export function registerToolRoutes(router, services) {
   });
 
   // --- MCP ---
+  router.get("/api/mcp/builtins", () => ({ builtins: mcp.listBuiltins() }));
+  router.post("/api/mcp/builtins/:id/install", async (ctx) => {
+    let body = {};
+    try { body = (await ctx.readBody()) || {}; } catch { body = {}; }
+    const server = mcp.installBuiltin(ctx.params.id, body);
+    audit.record({ actor: "user", action: "mcp.builtin.install", target: ctx.params.id });
+    return { __status: 201, body: { server, servers: mcp.listServers() } };
+  });
   router.get("/api/mcp/servers", () => ({ servers: mcp.listServers() }));
   router.post("/api/mcp/servers", async (ctx) => {
     const body = await ctx.readBody();

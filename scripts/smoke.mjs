@@ -129,6 +129,11 @@ async function main() {
   check("GET /api/mcp/servers", mcpList.status === 200 && mcpList.data.servers.length === 1, `${mcpList.data?.servers?.length} servers`);
   const mcpDel = await json("DELETE", `/api/mcp/servers/${mcpAdd.data.server.id}`);
   check("DELETE /api/mcp/servers/:id", mcpDel.status === 200 && mcpDel.data.servers.length === 0, `${mcpDel.data?.servers?.length} after delete`);
+  const builtins = await json("GET", "/api/mcp/builtins");
+  check("GET /api/mcp/builtins", builtins.status === 200 && builtins.data.builtins.length === 6, `${builtins.data?.builtins?.length} builtins`);
+  const install = await json("POST", "/api/mcp/builtins/flutter/install", {});
+  check("POST /api/mcp/builtins/:id/install", install.status === 201 && install.data.server.id === "flutter" && install.data.server.builtin === true, `status ${install.status}`);
+  await json("DELETE", "/api/mcp/servers/flutter");
 
   const prompt = await json("GET", "/api/system-prompt");
   check("GET /api/system-prompt", prompt.status === 200 && prompt.data.corePrompt.length > 50, `v${prompt.data?.version}`);

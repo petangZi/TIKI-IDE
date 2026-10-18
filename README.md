@@ -69,7 +69,8 @@ src/security/audit.mjs      append-only audit trail
 src/security/auth.mjs       loopback-open / remote bearer+CSRF gate
 src/security/policy.mjs     command allowlist, risk classes, approval broker
 src/adapters/               opencode, openai-compatible (hermes/openclaw), mock
-src/mcp/client.mjs          dependency-free stdio MCP client (JSON-RPC 2.0)
+src/mcp/client.mjs          dependency-free MCP client (stdio + Streamable HTTP)
+src/mcp/builtins.mjs        curated built-in MCP catalog (one-click install)
 src/tools/                  non-AI tool runtime (schema validation, timeouts)
 src/subagents/registry.mjs  persistent typed sub-agent records
 src/engine/orchestrator.mjs run lifecycle: queue → execute → diff → usage → done
@@ -106,6 +107,11 @@ are not persisted.
   forge cross-origin.
 - MCP servers are treated as untrusted until marked trusted; their output is
   redacted before it reaches the UI.
+- MCP supports two transports: **stdio** (child process) and **Streamable HTTP**
+  (POST JSON-RPC, JSON or SSE replies). Install from a curated catalog of six
+  built-ins — REA, Agent Reach (bundle), Supabase, Firebase, Flutter, Bolt —
+  via the MCP panel or `POST /api/mcp/builtins/:id/install`. Entries that need a
+  token report `needs config` until the env var is set.
 
 ### Tool runtime and the public-API gateway
 
