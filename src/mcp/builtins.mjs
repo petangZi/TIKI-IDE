@@ -243,11 +243,11 @@ export const BUILTIN_MCP_SERVERS = [
       "Component library MCP: browse, fetch and install 160+ animated React/Tailwind components, blocks and page templates directly from an agent. Free tier works without a key; Pro components need a license.",
     transport: "stdio",
     command: "npx",
-    args: ["-y", "lightswind", "mcp"],
+    args: ["-y", "-p", "lightswind@latest", "-p", "@modelcontextprotocol/sdk", "-p", "fuse.js", "lightswind", "mcp"],
     env: {},
     requires: ["npx"],
     install: "npx lightswind mcp init   (auto-configures Cursor / Claude Desktop)",
-    note: "The published CLI (3.2.5) ships dist/mcp/index.js without declaring @modelcontextprotocol/sdk, so `npx lightswind mcp` exits with MODULE_NOT_FOUND. Install @modelcontextprotocol/sdk next to it, or run from a local checkout.",
+    note: "The published CLI (3.2.5) declares only fs-extra, so plain `npx lightswind mcp` dies on MODULE_NOT_FOUND for @modelcontextprotocol/sdk and fuse.js. The launch args pull both alongside it, which starts lightswind-ui-mcp 1.1.0 cleanly.",
     docs: "https://github.com/codewithMUHILAN/Lightswind-UI-Library",
     tags: ["frontend", "ui", "components", "tailwind", "react"],
     defaultTrust: "untrusted"

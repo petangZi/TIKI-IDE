@@ -121,7 +121,9 @@ test("research-driven built-ins resolve to real launch specs", () => {
   assert.equal(magicRemote.url, "https://21st.dev/api/mcp");
   assert.equal(magicRemote.headers["x-api-key"], "k");
 
-  assert.deepEqual(resolveBuiltin("lightswind").args, ["-y", "lightswind", "mcp"]);
+  // Published CLI declares only fs-extra, so the two extras it requires at
+  // runtime have to be pulled in alongside it or the server dies on load.
+  assert.deepEqual(resolveBuiltin("lightswind").args, ["-y", "-p", "lightswind@latest", "-p", "@modelcontextprotocol/sdk", "-p", "fuse.js", "lightswind", "mcp"]);
   assert.deepEqual(resolveBuiltin("frontend-inspo").args, ["-y", "frontend-inspo-mcp"]);
   assert.equal(resolveBuiltin("context7-remote", { env: { CONTEXT7_API_KEY: "k" } }).headers.Authorization, "Bearer k");
 });
